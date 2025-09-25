@@ -1,7 +1,5 @@
 from __future__ import annotations
-
 from datetime import timedelta
-
 from .models import SurfaceFeature, SurfaceSection
 from .service import ConnectHubService, utcnow
 
@@ -32,7 +30,6 @@ def bootstrap_demo_service() -> ConnectHubService:
         tags=["ai", "matching"],
         description="Hands-on AI matching experiments.",
     )
-
     service.configure_surface_blueprint(
         frontend=SurfaceSection(
             title="前台體驗",

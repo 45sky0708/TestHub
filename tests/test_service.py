@@ -148,6 +148,7 @@ def test_reset_service_replaces_global_instance() -> None:
     reset_service()
     assert service_module.service is not first_instance
     assert isinstance(service_module.service, ConnectHubService)
+    
 
 
 def test_surface_blueprint_configuration() -> None:

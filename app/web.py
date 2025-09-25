@@ -9,6 +9,7 @@ from wsgiref.simple_server import make_server
 
 from .main import bootstrap_demo_service
 from .models import Event, SurfaceSection
+from .models import Event
 from .service import ConnectHubService
 
 HTML_CONTENT_TYPE = ("Content-Type", "text/html; charset=utf-8")
@@ -84,6 +85,7 @@ def _render_feature_cards(section: SurfaceSection) -> str:
     if cards:
         return "\n".join(cards)
     return "<p class=\"empty\">尚未定義功能。</p>"
+
 
 
 def render_dashboard(service: ConnectHubService) -> str:
@@ -414,7 +416,6 @@ def surface_payload(service: ConnectHubService) -> dict[str, object]:
         "frontend": serialize_section(blueprint.frontend),
         "backend": serialize_section(blueprint.backend),
     }
-
 
 def create_app(service: Optional[ConnectHubService] = None) -> Callable:
     svc = service or bootstrap_demo_service()
