@@ -40,6 +40,8 @@ def test_dashboard_page_contains_sections() -> None:
     html = payload.decode("utf-8")
     assert "Connect Hub MVP 面板" in html
     assert "所有活動" in html
+    assert "前台體驗" in html
+    assert "後台營運" in html
 
 
 def test_events_api_returns_seed_data() -> None:
@@ -60,3 +62,14 @@ def test_dashboard_api_contains_metrics() -> None:
     metrics = json.loads(payload.decode("utf-8"))
     assert metrics["total_events"] >= 1
     assert isinstance(metrics["upcoming_events"], list)
+
+
+def test_surface_api_returns_blueprint() -> None:
+    app = create_app()
+    status, headers, payload = _call_app(app, "/api/surface")
+    assert status == 200
+    assert headers["Content-Type"].startswith("application/json")
+    blueprint = json.loads(payload.decode("utf-8"))
+    assert "frontend" in blueprint and "backend" in blueprint
+    assert blueprint["frontend"]["features"]
+    assert any(feature["ai_enabled"] for feature in blueprint["backend"]["features"])

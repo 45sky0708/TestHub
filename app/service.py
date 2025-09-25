@@ -14,6 +14,8 @@ from .models import (
     Recommendation,
     RecommendationResponse,
     Registration,
+    SurfaceBlueprint,
+    SurfaceSection,
 )
 
 
@@ -33,6 +35,10 @@ class ConnectHubService:
         self._registration_index: Dict[Tuple[str, str], str] = {}
         self._feedback: Dict[str, Feedback] = {}
         self._matches: Dict[str, MatchRecord] = {}
+        self._surface_blueprint = SurfaceBlueprint(
+            frontend=SurfaceSection(title="前台介面", summary="", features=[]),
+            backend=SurfaceSection(title="後台介面", summary="", features=[]),
+        )
 
     # ------------------------------------------------------------------
     # Event operations
@@ -293,6 +299,21 @@ class ConnectHubService:
             upcoming_events=upcoming[:5],
             matches_waiting_review=pending_matches,
         )
+
+    # ------------------------------------------------------------------
+    # Experience blueprint
+    # ------------------------------------------------------------------
+    def configure_surface_blueprint(
+        self,
+        *,
+        frontend: SurfaceSection,
+        backend: SurfaceSection,
+    ) -> SurfaceBlueprint:
+        self._surface_blueprint = SurfaceBlueprint(frontend=frontend, backend=backend)
+        return self._surface_blueprint
+
+    def surface_blueprint(self) -> SurfaceBlueprint:
+        return self._surface_blueprint
 
     # ------------------------------------------------------------------
     # Helpers

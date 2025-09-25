@@ -74,3 +74,25 @@ class DashboardMetrics:
     top_categories: List[str]
     upcoming_events: List[Event]
     matches_waiting_review: int
+
+
+@dataclass(slots=True)
+class SurfaceFeature:
+    name: str
+    description: str
+    ai_enabled: bool = False
+    highlights: List[str] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class SurfaceSection:
+    title: str
+    summary: str
+    features: List[SurfaceFeature] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class SurfaceBlueprint:
+    frontend: SurfaceSection
+    backend: SurfaceSection
+

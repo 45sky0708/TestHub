@@ -14,8 +14,8 @@
 ## 開發啟動程式碼
 
 - `app/models.py` 與 `app/service.py`：定義 Connect Hub MVP 的核心領域模型與應用服務，涵蓋活動管理、報名（含重複註冊防護與取消流程）、AI 推薦與人才媒合邏輯。
-- `app/main.py`：提供可快速載入範例資料的 helper，方便團隊本地驗證流程或接上 API 層。
-- `app/web.py`：使用標準庫組成的 WSGI 應用，提供 MVP 面板與 JSON API，便於快速部署或串接。
+- `app/main.py`：提供可快速載入範例資料與前/後台功能藍圖設定的 helper，方便團隊本地驗證流程或接上 API 層。
+- `app/web.py`：使用標準庫組成的 WSGI 應用，提供 MVP 面板、前台/後台功能藍圖視覺化與 JSON API，便於快速部署或串接。
 - `tests/test_service.py`：覆蓋主要服務操作（活動 CRUD、報名/取消、推薦、媒合狀態與儀表板指標），做為持續開發的安全網。
 
 ### 啟動 MVP Demo 畫面
@@ -32,7 +32,7 @@
    python -m app.web
    ```
 
-   預設伺服器會啟動於 `http://127.0.0.1:8000/`，可看到即時指標、即將舉辦與所有活動清單，並可透過 `/api/events`、`/api/dashboard` 取得 JSON 資訊。
+   預設伺服器會啟動於 `http://127.0.0.1:8000/`，可看到即時指標、即將舉辦與所有活動清單，以及前台/後台功能藍圖。可透過 `/api/events`、`/api/dashboard` 與 `/api/surface` 取得 JSON 資訊。
 
 ### 執行測試
 

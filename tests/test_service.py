@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 import app.service as service_module
+from app.models import SurfaceFeature, SurfaceSection
 from app.service import ConnectHubService, reset_service
 
 UTC = timezone.utc
@@ -147,3 +148,23 @@ def test_reset_service_replaces_global_instance() -> None:
     reset_service()
     assert service_module.service is not first_instance
     assert isinstance(service_module.service, ConnectHubService)
+    
+
+
+def test_surface_blueprint_configuration() -> None:
+    svc = service_module.service
+    frontend = SurfaceSection(
+        title="前台",
+        summary="demo",
+        features=[SurfaceFeature(name="首頁", description="展示", ai_enabled=False)],
+    )
+    backend = SurfaceSection(
+        title="後台",
+        summary="demo",
+        features=[SurfaceFeature(name="成效分析", description="AI", ai_enabled=True)],
+    )
+    svc.configure_surface_blueprint(frontend=frontend, backend=backend)
+
+    blueprint = svc.surface_blueprint()
+    assert blueprint.frontend.title == "前台"
+    assert blueprint.backend.features[0].ai_enabled is True

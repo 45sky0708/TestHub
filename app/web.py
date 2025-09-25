@@ -8,6 +8,7 @@ from typing import Callable, Iterable, Optional
 from wsgiref.simple_server import make_server
 
 from .main import bootstrap_demo_service
+from .models import Event, SurfaceSection
 from .models import Event
 from .service import ConnectHubService
 
@@ -58,10 +59,42 @@ def _render_events(events: Iterable[Event]) -> str:
     return "<p class=\"empty\">目前沒有可報名的活動。</p>"
 
 
+def _render_feature_cards(section: SurfaceSection) -> str:
+    cards: list[str] = []
+    for feature in section.features:
+        ai_badge = "<span class=\"badge badge-ai\">AI</span>" if feature.ai_enabled else ""
+        highlights = "".join(f"<li>{item}</li>" for item in feature.highlights)
+        highlight_block = f"<ul class=\"highlights\">{highlights}</ul>" if highlights else ""
+        cards.append(
+            """
+            <article class="feature-card">
+                <header>
+                    <h3>{name}</h3>
+                    {ai_badge}
+                </header>
+                <p>{description}</p>
+                {highlight_block}
+            </article>
+            """.format(
+                name=feature.name,
+                ai_badge=ai_badge,
+                description=feature.description,
+                highlight_block=highlight_block,
+            )
+        )
+    if cards:
+        return "\n".join(cards)
+    return "<p class=\"empty\">尚未定義功能。</p>"
+
+
+
 def render_dashboard(service: ConnectHubService) -> str:
     metrics = service.dashboard()
     upcoming_markup = _render_events(metrics.upcoming_events)
     all_events_markup = _render_events(service.list_events())
+    blueprint = service.surface_blueprint()
+    frontend_markup = _render_feature_cards(blueprint.frontend)
+    backend_markup = _render_feature_cards(blueprint.backend)
     return f"""
     <!DOCTYPE html>
     <html lang="zh-Hant">
@@ -167,6 +200,69 @@ def render_dashboard(service: ConnectHubService) -> str:
                 font-weight: 600;
                 letter-spacing: 0.05em;
             }}
+            .surface-section {{
+                display: grid;
+                gap: 1.25rem;
+            }}
+            .surface-section .feature-grid {{
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 1.25rem;
+            }}
+            .surface-section p.summary {{
+                margin: 0;
+                color: #475569;
+            }}
+            .feature-card {{
+                border-radius: 12px;
+                background: #0f172a;
+                color: #f8fafc;
+                padding: 1.25rem;
+                box-shadow: 0 10px 24px rgba(15, 23, 42, 0.35);
+                border: 1px solid rgba(148, 163, 184, 0.2);
+                min-height: 200px;
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+            }}
+            .feature-card header {{
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.75rem;
+            }}
+            .feature-card h3 {{
+                margin: 0;
+                font-size: 1.1rem;
+            }}
+            .feature-card ul.highlights {{
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                display: grid;
+                gap: 0.4rem;
+            }}
+            .feature-card ul.highlights li::before {{
+                content: "•";
+                margin-right: 0.4rem;
+                color: #38bdf8;
+            }}
+            .badge {{
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.75rem;
+                padding: 0.15rem 0.55rem;
+                border-radius: 999px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+            }}
+            .badge-ai {{
+                background: rgba(59, 130, 246, 0.18);
+                color: #60a5fa;
+                border: 1px solid rgba(96, 165, 250, 0.4);
+            }}
             dl {{
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -229,6 +325,14 @@ def render_dashboard(service: ConnectHubService) -> str:
                     background: rgba(148, 163, 184, 0.16);
                     color: #e2e8f0;
                 }}
+                .feature-card {{
+                    background: rgba(15, 23, 42, 0.9);
+                    border: 1px solid rgba(148, 163, 184, 0.35);
+                    color: #e2e8f0;
+                }}
+                .surface-section p.summary {{
+                    color: #cbd5f5;
+                }}
                 .description {{ color: #cbd5f5; }}
                 dt {{ color: #cbd5f5; }}
                 footer.page-footer {{ color: #cbd5f5; }}
@@ -257,6 +361,20 @@ def render_dashboard(service: ConnectHubService) -> str:
             <h2>所有活動</h2>
             {all_events_markup}
         </section>
+        <section class="surface-section">
+            <h2>{blueprint.frontend.title}</h2>
+            <p class="summary">{blueprint.frontend.summary}</p>
+            <div class="feature-grid">
+                {frontend_markup}
+            </div>
+        </section>
+        <section class="surface-section">
+            <h2>{blueprint.backend.title}</h2>
+            <p class="summary">{blueprint.backend.summary}</p>
+            <div class="feature-grid">
+                {backend_markup}
+            </div>
+        </section>
         <footer class="page-footer">
             <p>此頁面使用內建的記憶體資料，做為 Connect Hub MVP 的可視化雛型。</p>
         </footer>
@@ -276,6 +394,29 @@ def dashboard_payload(service: ConnectHubService) -> dict[str, object]:
     return payload
 
 
+def surface_payload(service: ConnectHubService) -> dict[str, object]:
+    blueprint = service.surface_blueprint()
+
+    def serialize_section(section: SurfaceSection) -> dict[str, object]:
+        return {
+            "title": section.title,
+            "summary": section.summary,
+            "features": [
+                {
+                    "name": feature.name,
+                    "description": feature.description,
+                    "ai_enabled": feature.ai_enabled,
+                    "highlights": list(feature.highlights),
+                }
+                for feature in section.features
+            ],
+        }
+
+    return {
+        "frontend": serialize_section(blueprint.frontend),
+        "backend": serialize_section(blueprint.backend),
+    }
+
 def create_app(service: Optional[ConnectHubService] = None) -> Callable:
     svc = service or bootstrap_demo_service()
 
@@ -291,6 +432,10 @@ def create_app(service: Optional[ConnectHubService] = None) -> Callable:
             return [body.encode("utf-8")]
         if path == "/api/dashboard":
             body = json.dumps(dashboard_payload(svc), default=str)
+            start_response("200 OK", [JSON_CONTENT_TYPE])
+            return [body.encode("utf-8")]
+        if path == "/api/surface":
+            body = json.dumps(surface_payload(svc), ensure_ascii=False)
             start_response("200 OK", [JSON_CONTENT_TYPE])
             return [body.encode("utf-8")]
         start_response("404 Not Found", [HTML_CONTENT_TYPE])
