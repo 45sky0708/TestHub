@@ -1,0 +1,14 @@
+[project]
+name = "connect-hub"
+version = "0.1.0"
+description = "Connect Hub MVP core services"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.2.2",
+]
+
+[tool.pytest.ini_options]
+addopts = "-q"
